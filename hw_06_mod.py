@@ -9,12 +9,8 @@ folder_extension = {'Images': ['.jpeg', '.png', '.jpg', '.svg', '.bmp'],
                     'Video': ['.avi', '.mp4', '.mov', '.mkv'],
                     'Documents': ['.doc', '.docx', '.txt', '.pdf', '.xlsx', '.pptx'],
                     'Audio': ['.mp3', '.ogg', '.wav', '.amr'],
-                    'Archives': ['.zip', '.gz', '.tar', '.rar'],
-                    'Other': None}
-
-lst_extension = ['.jpeg', '.png', '.jpg', '.svg', '.bmp', '.avi', '.mp4', '.mov', '.mkv',
-                    '.doc', '.docx', '.txt', '.pdf', '.xlsx', '.pptx', '.mp3', '.ogg', '.wav', '.amr',
-                    '.zip', '.gz', '.tar', '.rar']
+                    'Archives': ['.zip', '.gz', '.tar'],
+                    'Other': []}
 
 exception_lst = []
 images_count = 0
@@ -31,41 +27,41 @@ def greate_sort_folder(path: Path, folder_name: str):
         path.joinpath(folder_name).mkdir()
                 
     except FileExistsError:
-        images = Path(str(path) + '\\' + folder_name)
-        target = str(path) + '\\Old_' + folder_name + '_' + time.strftime('%Y%m%d%H%M%S')
-        images.rename(target)
+        old_path = path / folder_name
+        target = 'Old_' + folder_name + '_' + time.strftime('%Y%m%d%H%M%S')
+        old_path.rename(path / target)
         
         greate_sort_folder(path, folder_name)
 
 def exception_search(path: Path, target_path: Path) -> bool:
     
     for name in exception_lst:
-        if fnmatch.fnmatch(str(target_path), str(path / name) + '**/*') or \
-            fnmatch.fnmatch(str(target_path), str(path / name)):
+        if fnmatch.fnmatch(target_path, path / name / '**/*') or \
+            fnmatch.fnmatch(target_path, path / name):
             return True
         
     return False
 
-def sort_process(path: Path, path_target: Path, name_file: str, extension: str) -> str:
+def sort_process(path: Path, path_target: Path, name_file: str, extension: str) -> Path:
     '''sort by extension into folders.
         Return the new file StrPath'''
     for folder, folder_key in folder_extension.items():
         if extension in folder_key:
             
             if folder == 'Archives':
-                target = str(path) + '\\Archives\\' + pathlib.PurePath(Path(str(path) + '\\Archives\\' + name_file)).stem
-                shutil.unpack_archive(str(path_target), target)
+                target = path / 'Archives' / pathlib.PurePath(path / 'Archives' / name_file).stem
+                shutil.unpack_archive(path_target, target)
                 path_target.unlink()
                 count_files(folder)
                 return(target)                
             
-            target = str(path) + '\\' + folder + '\\' + name_file
+            target = path / folder / name_file
             path_target.replace(target)
             count_files(folder)
             return(target)
     
     else:
-        target = str(path) + '\\Other\\' + name_file
+        target = path / 'Other' / name_file
         path_target.replace(target)
         count_files('Other')
         return(target)
@@ -134,7 +130,7 @@ def main():
             name = normalize(pathlib.PurePath(item).stem, count_files) + extension
             count_files += 1
             p = sort_process(path, item, name, extension)
-            changing_files += '  ' + str(item) + ' --->    ' + p + '\n'
+            changing_files += '  ' + str(item) + ' --->    ' + str(p) + '\n'
                     
     for folder in reversed(folders_lst):
         folder.rmdir()
