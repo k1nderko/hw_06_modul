@@ -37,6 +37,7 @@ def exception_search(path: Path, target_path: Path) -> bool:
     
     for name in exception_lst:
         if fnmatch.fnmatch(target_path, path / name / '**/*') or \
+            fnmatch.fnmatch(target_path, path / name / '**') or \
             fnmatch.fnmatch(target_path, path / name):
             return True
         
@@ -111,9 +112,16 @@ def main():
     folders_lst = []
     changing_files = ''
     changing_folders = ''
-
+      
+    try:
+            if sys.argv[2]:
+                second_sort = True
+    except IndexError:
+        second_sort = False         
+    
     for folder_name in folder_extension:
-        greate_sort_folder(path, folder_name)
+        if not second_sort:
+            greate_sort_folder(path, folder_name)
         exception_lst.append(folder_name)
         exception_lst.append(result)
     
@@ -123,6 +131,8 @@ def main():
             continue
         
         if item.is_dir():
+            if exception_search(path, item):
+                continue
             folders_lst.append(item)
             
         if item.is_file():
